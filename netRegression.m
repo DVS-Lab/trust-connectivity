@@ -1,45 +1,79 @@
+%{
+Decision (agnostic to partner condition)
+Friend Reciprocate (0.903)
+Friend Defect (0.948)
+Stranger Reciprocate (0.884)
+Stranger Defect (0.903)
+Computer Reciprocate (0.729)
+Computer Defect (0.754)
+Miss (Decision phase) (0.2)
+Miss (Outcome phase) (0.2)
+Subject Keep (outcome) (0.9226)
+Net01 TS (visual)
+Net02 TS (visual)
+Net03 TS (visual)
+Net04 TS (DMN)
+Net05 TS (cerebellum)
+Net06 TS (sensorimotor)
+Net07 TS (auditory)
+Net08 TS (ECN)
+Net09 TS (frontoparietal)
+Net10 TS (frontoparietal)
+%}
+
 clear;
 maindir = pwd;
-subnums = dir(fullfile(maindir,'data'));
-subnums = struct2cell(subnums);
-subnums = subnums(1,4:end);
+subnums = 2:32;
+skips = [13 14 15 23 29];
+[a,b] = ismember(skips,subnums);
+subnums(b) = [];
+nruns = 6;
 
-nets = [4 8 9 10];
-resultsmat = zeros(length(subnums),12); % punishment, reward, neutral. -- for each net
+DMN_results = nan(length(subnums),6); % Friend_R, Friend_D, Stranger_R, Stranger_D, Computer_R, Computer_D
+ECN_results = nan(length(subnums),6); % Friend_R, Friend_D, Stranger_R, Stranger_D, Computer_R, Computer_D
 
 for s = 1:length(subnums)
-    for n = 1:length(nets)
-                
-        featdir = fullfile(maindir,'data',subnums{s},'tfMRI_GAMBLING_LR','lev1.feat');
-        design = load(fullfile(featdir,'design.mtx'));
-        data = load(fullfile(featdir,sprintf('net%02d.txt',nets(n))));
-        sLR = regstats(zscore(data),zscore(design),'linear',{'all'});
+    beta_mat_dmn = nan(nruns,10);
+    beta_mat_ecn = nan(nruns,10);
+    
+    for r = 1:nruns
         
-        featdir = fullfile(maindir,'data',subnums{s},'tfMRI_GAMBLING_RL','lev1.feat');
-        design = load(fullfile(featdir,'design.mtx'));
-        data = load(fullfile(featdir,sprintf('net%02d.txt',nets(n))));
-        sRL = regstats(zscore(data),zscore(design),'linear',{'all'});
+        if subnums(s) == 12 && r == 5
+            continue
+        end
         
-        tmpB = mean([sRL.beta sLR.beta],2);
-        resultsmat(s,(n*3)-2) = tmpB(2);
-        resultsmat(s,(n*3)-1) = tmpB(3);
-        resultsmat(s,n*3) = tmpB(4);
+        featdir = fullfile(maindir,'data',sprintf('sub%02d',subnums(s)));
+        outfile = fullfile(featdir,sprintf('sub%02d_r%d_design.mtx',subnums(s),r));
+        D = load(outfile);
         
- 
+        baseModel = D(:,1:10);
+        DMN = D(:,14);
+        ECN = D(:,18);
+        
+        good_idx = find(any(baseModel)); %preserve indices
+        baseModel(:,~any(baseModel)) = []; %strip 0 columns
+        
+        % run DMN
+        stats = regstats(zscore(DMN),zscore(baseModel),'linear',{'all'});
+        tmp_betas = stats.beta(2:end);
+        beta_mat_dmn(r,good_idx) = tmp_betas; %put things in the right spot
+        
+        
+        % run ECN
+        stats = regstats(zscore(ECN),zscore(baseModel),'linear',{'all'});
+        tmp_betas = stats.beta(2:end);
+        beta_mat_ecn(r,good_idx) = tmp_betas; %put things in the right spot
     end
+    
+    % nan(length(subnums),6); % Friend_R, Friend_D, Stranger_R, Stranger_D, Computer_R, Computer_D
+    DMN_results(s,:) = nanmean(beta_mat_dmn(:,2:7));
+    ECN_results(s,:) = nanmean(beta_mat_ecn(:,2:7));
+    
 end
 
-DMN = resultsmat(:,1:3);
-ECN = resultsmat(:,4:6);
-LFPN = resultsmat(:,7:9);
-RFPN = resultsmat(:,10:12);
 
-DMN = DMN(:,[1 3 2]);
-ECN = ECN(:,[1 3 2]);
-LFPN = LFPN(:,[1 3 2]);
-RFPN = RFPN(:,[1 3 2]);
+keyboard
 
-myN = length(DMN);
-figure,barweb_dvs2([mean(DMN); mean(ECN); mean(LFPN); mean(RFPN)], [std(DMN)/sqrt(myN); std(ECN)/sqrt(myN); std(LFPN)/sqrt(myN); std(RFPN)/sqrt(myN)])
+%figure,barweb_dvs2([mean(DMN); mean(ECN); mean(LFPN); mean(RFPN)], [std(DMN)/sqrt(myN); std(ECN)/sqrt(myN); std(LFPN)/sqrt(myN); std(RFPN)/sqrt(myN)])
 
 
