@@ -1,18 +1,21 @@
 clear;
 maindir = pwd;
-subnums = dir(fullfile(maindir,'data'));
-subnums = struct2cell(subnums);
-subnums = subnums(1,4:end);
+subnums = 2:32;
+skips = [13 14 15 23 29];
+[a,b] = ismember(skips,subnums);
+subnums(b) = [];
 
-ped = {'LR', 'RL'};
 
 for s = 1:length(subnums)
-    for p = 1:2
+    for r = 1:6
         % mycmd = ['grep -v [A-Za-df-z] design.mat | grep [0-9] > design.mtx'];
         
-        featdir = fullfile(maindir,'data',subnums{s},['tfMRI_GAMBLING_' ped{p}],'lev1.feat');
-        infile = fullfile(featdir,'design.mat');
-        outfile = fullfile(featdir,'design.mtx');
+        if str2double(subnums(s)) == 12 && r == 5
+            continue
+        end
+        featdir = fullfile(maindir,'data',sprintf('sub%02d',subnums(s)));
+        infile = fullfile(featdir,sprintf('sub%02d_r%d_design.mat',subnums(s),r));
+        outfile = fullfile(featdir,sprintf('sub%02d_r%d_design.mtx',subnums(s),r));
         mycmd = ['grep -v [A-Za-df-z] ' infile ' | grep [0-9] > ' outfile];
         system(mycmd);
         
