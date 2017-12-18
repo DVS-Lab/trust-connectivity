@@ -72,8 +72,20 @@ for s = 1:length(subnums)
 end
 
 
-keyboard
+myN = length(subnums);
 
-%figure,barweb_dvs2([mean(DMN); mean(ECN); mean(LFPN); mean(RFPN)], [std(DMN)/sqrt(myN); std(ECN)/sqrt(myN); std(LFPN)/sqrt(myN); std(RFPN)/sqrt(myN)])
+figure,barweb_dvs2([mean(DMN_results(:,1:2)); mean(DMN_results(:,3:4)); mean(DMN_results(:,5:6))], [std(DMN_results(:,1:2))/sqrt(myN); std(DMN_results(:,3:4))/sqrt(myN); std(DMN_results(:,5:6))/sqrt(myN)])
+title('DMN results')
+set(gca,'XTickLabel',{'Friend','Stranger','Computer'},'XTick',[1 2 3])
+xlabel('Partner');
+ylabel('Response (beta)');
+legend('reciprocate','defect','Location','Northeast')
+
+figure,barweb_dvs2([mean(ECN_results(:,1:2)); mean(ECN_results(:,3:4)); mean(ECN_results(:,5:6))], [std(ECN_results(:,1:2))/sqrt(myN); std(ECN_results(:,3:4))/sqrt(myN); std(ECN_results(:,5:6))/sqrt(myN)])
+title('ECN results')
+set(gca,'XTickLabel',{'Friend','Stranger','Computer'},'XTick',[1 2 3])
+xlabel('Partner');
+ylabel('Response (beta)');
+legend('reciprocate','defect','Location','Southeast')
 
 
