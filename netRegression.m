@@ -88,4 +88,17 @@ xlabel('Partner');
 ylabel('Response (beta)');
 legend('reciprocate','defect','Location','Southeast')
 
+fid = fopen('dmn_summary.csv','w');
+fprintf(fid,'Subject,Friend_R,Friend_D,Stranger_R,Stranger_D,Computer_R,Computer_D\n');
+for s = 1:length(subnums)
+    fprintf(fid,'sub%02d,%3.3f,%3.3f,%3.3f,%3.3f,%3.3f,%3.3f\n',subnums(s),DMN_results(s,:));
+end
+fclose(fid);
+
+fid = fopen('ecn_summary.csv','w');
+fprintf(fid,'Subject,Friend_R,Friend_D,Stranger_R,Stranger_D,Computer_R,Computer_D\n');
+for s = 1:length(subnums)
+    fprintf(fid,'sub%02d,%3.3f,%3.3f,%3.3f,%3.3f,%3.3f,%3.3f\n',subnums(s),ECN_results(s,:));
+end
+fclose(fid);
 
