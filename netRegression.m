@@ -31,10 +31,14 @@ nruns = 6;
 
 DMN_results = nan(length(subnums),6); % Friend_R, Friend_D, Stranger_R, Stranger_D, Computer_R, Computer_D
 ECN_results = nan(length(subnums),6); % Friend_R, Friend_D, Stranger_R, Stranger_D, Computer_R, Computer_D
+rFPN_results = nan(length(subnums),6); % Friend_R, Friend_D, Stranger_R, Stranger_D, Computer_R, Computer_D
+lFPN_results = nan(length(subnums),6); % Friend_R, Friend_D, Stranger_R, Stranger_D, Computer_R, Computer_D
 
 for s = 1:length(subnums)
     beta_mat_dmn = nan(nruns,10);
     beta_mat_ecn = nan(nruns,10);
+    beta_mat_rfpn = nan(nruns,10);
+    beta_mat_lfpn = nan(nruns,10);
     
     for r = 1:nruns
         
@@ -49,6 +53,9 @@ for s = 1:length(subnums)
         baseModel = D(:,1:10);
         DMN = D(:,14);
         ECN = D(:,18);
+        rFPN = D(:,19);
+        lFPN = D(:,20);
+        
         
         good_idx = find(any(baseModel)); %preserve indices
         baseModel(:,~any(baseModel)) = []; %strip 0 columns
@@ -63,11 +70,25 @@ for s = 1:length(subnums)
         stats = regstats(zscore(ECN),zscore(baseModel),'linear',{'all'});
         tmp_betas = stats.beta(2:end);
         beta_mat_ecn(r,good_idx) = tmp_betas; %put things in the right spot
+        
+        
+        stats = regstats(zscore(lFPN),zscore(baseModel),'linear',{'all'});
+        tmp_betas = stats.beta(2:end);
+        beta_mat_rfpn(r,good_idx) = tmp_betas; %put things in the right spot
+        
+        stats = regstats(zscore(rFPN),zscore(baseModel),'linear',{'all'});
+        tmp_betas = stats.beta(2:end);
+        beta_mat_lfpn(r,good_idx) = tmp_betas; %put things in the right spot
+        
     end
     
     % nan(length(subnums),6); % Friend_R, Friend_D, Stranger_R, Stranger_D, Computer_R, Computer_D
     DMN_results(s,:) = nanmean(beta_mat_dmn(:,2:7));
     ECN_results(s,:) = nanmean(beta_mat_ecn(:,2:7));
+    
+    rFPN_results(s,:) = nanmean(beta_mat_rfpn(:,2:7));
+    lFPN_results(s,:) = nanmean(beta_mat_lfpn(:,2:7));
+    
     
 end
 
@@ -87,6 +108,21 @@ set(gca,'XTickLabel',{'Friend','Stranger','Computer'},'XTick',[1 2 3])
 xlabel('Partner');
 ylabel('Response (beta)');
 legend('reciprocate','defect','Location','Southeast')
+
+
+% figure,barweb_dvs2([mean(lFPN_results(:,1:2)); mean(lFPN_results(:,3:4)); mean(lFPN_results(:,5:6))], [std(lFPN_results(:,1:2))/sqrt(myN); std(lFPN_results(:,3:4))/sqrt(myN); std(lFPN_results(:,5:6))/sqrt(myN)])
+% title('lFPN results')
+% set(gca,'XTickLabel',{'Friend','Stranger','Computer'},'XTick',[1 2 3])
+% xlabel('Partner');
+% ylabel('Response (beta)');
+% legend('reciprocate','defect','Location','Southeast')
+% 
+% figure,barweb_dvs2([mean(rFPN_results(:,1:2)); mean(rFPN_results(:,3:4)); mean(rFPN_results(:,5:6))], [std(rFPN_results(:,1:2))/sqrt(myN); std(rFPN_results(:,3:4))/sqrt(myN); std(rFPN_results(:,5:6))/sqrt(myN)])
+% title('rFPN results')
+% set(gca,'XTickLabel',{'Friend','Stranger','Computer'},'XTick',[1 2 3])
+% xlabel('Partner');
+% ylabel('Response (beta)');
+% legend('reciprocate','defect','Location','Southeast')
 
 fid = fopen('dmn_summary.csv','w');
 fprintf(fid,'Subject,Friend_R,Friend_D,Stranger_R,Stranger_D,Computer_R,Computer_D\n');
