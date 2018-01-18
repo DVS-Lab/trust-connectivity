@@ -29,13 +29,13 @@ skips = [13 14 15 23 29];
 subnums(b) = [];
 nruns = 6;
 
-DMN_results = nan(length(subnums),4); % coordinates = {'-44_-60_24', '02_-58_30', '02_56_-04', '54_-62_28'};
+DMN_results = nan(length(subnums),5); % coordinates = {'-44_-60_24', '02_-58_30', '02_56_-04', '54_-62_28'};
 
-coordinates = {'-44_-60_24', '02_-58_30', '02_56_-04', '54_-62_28'};
-ROIs = {'lTPJ', 'PCC', 'MPFC', 'rTPJ'};
+coordinates = {'-44_-60_24', '02_-58_30', '02_56_-04', '54_-62_28', '46_44_04'};
+ROIs = {'lTPJ', 'PCC', 'MPFC', 'rTPJ', 'VLPFC'};
 
 for s = 1:length(subnums)
-    corr_mat_dmn = nan(nruns,4); % ROIs = {'lTPJ', 'PCC', 'MPFC', 'rTPJ'};
+    corr_mat_dmn = nan(nruns,5); % ROIs = {'lTPJ', 'PCC', 'MPFC', 'rTPJ'};
     
     for r = 1:nruns
         
@@ -49,7 +49,11 @@ for s = 1:length(subnums)
         DMN = D(:,14);
         
         for c = 1:length(coordinates) % sub02_run2_DMNseed_02_-58_30.txt
-            tsfile = fullfile(maindir,'data',sprintf('sub%02d_run%d_DMNseed_%s.txt', subnums(s), r, coordinates{c}));
+            if strcmp('46_44_04',coordinates{c})
+                tsfile = fullfile(maindir,'data',sprintf('sub%02d_run%d_DMNseed_neg_%s.txt', subnums(s), r, coordinates{c}));
+            else
+                tsfile = fullfile(maindir,'data',sprintf('sub%02d_run%d_DMNseed_%s.txt', subnums(s), r, coordinates{c}));
+            end
             ts = load(tsfile);
             corr_mat_dmn(r,c) = corr(DMN,ts);
         end
@@ -63,9 +67,9 @@ myN = length(subnums);
 figure,
 bar(mean(DMN_results))
 hold on
-errorbar(1:4,mean(DMN_results),std(DMN_results)/sqrt(myN),'LineStyle','none')
+errorbar(1:5,mean(DMN_results),std(DMN_results)/sqrt(myN),'LineStyle','none')
 title('DMN results')
-set(gca,'XTickLabel',{'lTPJ', 'PCC', 'MPFC', 'rTPJ'},'XTick',[1 2 3 4])
+set(gca,'XTickLabel',{'lTPJ', 'PCC', 'MPFC', 'rTPJ', 'VLPFC'},'XTick',[1 2 3 4 5])
 xlabel('Region');
 ylabel('Correlation with DMN');
 
