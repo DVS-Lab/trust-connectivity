@@ -29,37 +29,45 @@ skips = [13 14 15 23 29];
 subnums(b) = [];
 nruns = 6;
 
-DMN_results = nan(length(subnums),5); % coordinates = {'-44_-60_24', '02_-58_30', '02_56_-04', '54_-62_28'};
 
-coordinates = {'-44_-60_24', '02_-58_30', '02_56_-04', '54_-62_28', '46_44_04'};
-ROIs = {'lTPJ', 'PCC', 'MPFC', 'rTPJ', 'VLPFC'};
+coordinates = {'-44_-60_24', '02_-58_30', '02_56_-04', '54_-62_28'};
+ROIs = {'lTPJ', 'PCC', 'MPFC', 'rTPJ'};
+DMN_results = nan(length(subnums),length(ROIs)); % coordinates = {'-44_-60_24', '02_-58_30', '02_56_-04', '54_-62_28'};
+pcorr_DMN_results = nan(length(subnums),length(ROIs)); % coordinates = {'-44_-60_24', '02_-58_30', '02_56_-04', '54_-62_28'};
 
 for s = 1:length(subnums)
-    corr_mat_dmn = nan(nruns,5); % ROIs = {'lTPJ', 'PCC', 'MPFC', 'rTPJ'};
-    
+    corr_mat_dmn = nan(nruns,length(ROIs)); % ROIs = {'lTPJ', 'PCC', 'MPFC', 'rTPJ'};
+    pcorr_mat_dmn = nan(nruns,length(ROIs)); % ROIs = {'lTPJ', 'PCC', 'MPFC', 'rTPJ'};
+
     for r = 1:nruns
         
         if subnums(s) == 12 && r == 5
             continue
         end
         
-        featdir = fullfile(maindir,'data',sprintf('sub%02d',subnums(s)));
+        featdir = fullfile(maindir,'indata','designs',sprintf('sub%02d',subnums(s)));
         outfile = fullfile(featdir,sprintf('sub%02d_r%d_design.mtx',subnums(s),r));
         D = load(outfile);
         DMN = D(:,14);
         
+        ts = [];
         for c = 1:length(coordinates) % sub02_run2_DMNseed_02_-58_30.txt
             if strcmp('46_44_04',coordinates{c})
-                tsfile = fullfile(maindir,'data',sprintf('sub%02d_run%d_DMNseed_neg_%s.txt', subnums(s), r, coordinates{c}));
+                tsfile = fullfile(maindir,'indata','DMNnodes',sprintf('sub%02d_run%d_DMNseed_neg_%s.txt', subnums(s), r, coordinates{c}));
             else
-                tsfile = fullfile(maindir,'data',sprintf('sub%02d_run%d_DMNseed_%s.txt', subnums(s), r, coordinates{c}));
+                tsfile = fullfile(maindir,'indata','DMNnodes',sprintf('sub%02d_run%d_DMNseed_%s.txt', subnums(s), r, coordinates{c}));
             end
-            ts = load(tsfile);
-            corr_mat_dmn(r,c) = corr(DMN,ts);
+            ts_tmp = load(tsfile);
+            ts = [ts ts_tmp];
         end
+        pcorrmat = partialcorr([DMN ts]);
+        pcorr_mat_dmn(r,:) = pcorrmat(1,2:end);
+        corrmat = corr([DMN ts]);
+        corr_mat_dmn(r,:) = corrmat(1,2:end);
     end
+    pcorr_DMN_results(s,:) = nanmean(pcorr_mat_dmn);
     DMN_results(s,:) = nanmean(corr_mat_dmn);
-    
+
 end
 
 
@@ -67,12 +75,22 @@ myN = length(subnums);
 figure,
 bar(mean(DMN_results))
 hold on
-errorbar(1:5,mean(DMN_results),std(DMN_results)/sqrt(myN),'LineStyle','none')
+errorbar(1:4,mean(DMN_results),std(DMN_results)/sqrt(myN),'LineStyle','none')
 title('DMN results')
-set(gca,'XTickLabel',{'lTPJ', 'PCC', 'MPFC', 'rTPJ', 'VLPFC'},'XTick',[1 2 3 4 5])
+set(gca,'XTickLabel',{'lTPJ', 'PCC', 'MPFC', 'rTPJ'},'XTick',[1 2 3 4])
 xlabel('Region');
-ylabel('Correlation with DMN');
+ylabel('Full Correlation with DMN');
 
+
+myN = length(subnums);
+figure,
+bar(mean(pcorr_DMN_results))
+hold on
+errorbar(1:4,mean(pcorr_DMN_results),std(pcorr_DMN_results)/sqrt(myN),'LineStyle','none')
+title('DMN results')
+set(gca,'XTickLabel',{'lTPJ', 'PCC', 'MPFC', 'rTPJ'},'XTick',[1 2 3 4])
+xlabel('Region');
+ylabel('Partial Correlation with DMN');
 %
 % fid = fopen('dmn_summary.csv','w');
 % fprintf(fid,'Subject,Friend_R,Friend_D,Stranger_R,Stranger_D,Computer_R,Computer_D\n');
